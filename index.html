@@ -1,1 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Development Guide</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>Discord Bot Guide</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#getting-started">Getting Started</a></li>
+                <li><a href="#setup">Setup & Installation</a></li>
+                <li><a href="#slash-commands">Slash Commands</a></li>
+                <li><a href="#events">Events & Handlers</a></li>
+                <li><a href="#examples">Code Examples</a></li>
+                <li><a href="#best-practices">Best Practices</a></li>
+            </ul>
+        </nav>
 
+        <main class="content">
+            <section id="getting-started" class="section">
+                <h1>Welcome to Discord Bot Development</h1>
+                <p>This guide will walk you through creating a Discord bot using JavaScript and the Discord.js library.</p>
+                
+                <div class="card">
+                    <h2>What You'll Learn</h2>
+                    <ul>
+                        <li>Setting up your development environment</li>
+                        <li>Creating and configuring your Discord bot</li>
+                        <li>Implementing slash commands</li>
+                        <li>Handling events and interactions</li>
+                        <li>Best practices for bot development</li>
+                        <li>Deploying your bot</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>Prerequisites</h2>
+                    <ul>
+                        <li>Node.js (v16.9.0 or higher)</li>
+                        <li>npm or yarn package manager</li>
+                        <li>A Discord account</li>
+                        <li>A code editor (VS Code recommended)</li>
+                        <li>Basic knowledge of JavaScript</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="setup" class="section">
+                <h1>Setting Up Your Discord Bot</h1>
+                <div class="card">
+                    <h2>1. Create a Discord Application</h2>
+                    <ol>
+                        <li>Go to the <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a></li>
+                        <li>Click "New Application" and give it a name</li>
+                        <li>Go to the "Bot" section and click "Add Bot"</li>
+                        <li>Enable the necessary intents:
+                            <ul>
+                                <li>Presence Intent</li>
+                                <li>Server Members Intent</li>
+                                <li>Message Content Intent</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="card">
+                    <h2>2. Basic Bot Setup</h2>
+                    <pre><code class="language-javascript">const { Client, GatewayIntentBits } = require('discord.js');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+});
+
+client.once('ready', () => {
+  console.log('Bot is ready!');
+});
+
+client.login(process.env.TOKEN);</code></pre>
+                </div>
+            </section>
+
+            <section id="slash-commands" class="section">
+                <h1>Slash Commands</h1>
+                <div class="card">
+                    <h2>Creating a Slash Command</h2>
+                    <pre><code class="language-javascript">const { SlashCommandBuilder } = require('discord.js');
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('ping')
+    .setDescription('Replies with Pong!'),
+  async execute(interaction) {
+    await interaction.reply('Pong!');
+  },
+};</code></pre>
+                </div>
+            </section>
+
+            <section id="events" class="section">
+                <h1>Events & Handlers</h1>
+                <div class="card">
+                    <h2>Basic Event Handler</h2>
+                    <pre><code class="language-javascript">const { Events } = require('discord.js');
+
+module.exports = {
+  name: Events.ClientReady,
+  once: true,
+  execute(client) {
+    console.log(`Ready! Logged in as ${client.user.tag}`);
+  },
+};</code></pre>
+                </div>
+            </section>
+
+            <section id="examples" class="section">
+                <h1>Code Examples</h1>
+                <div class="card">
+                    <h2>Moderation Command Example</h2>
+                    <pre><code class="language-javascript">const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('kick')
+    .setDescription('Kick a user from the server')
+    .addUserOption(option =>
+      option.setName('user')
+        .setDescription('The user to kick')
+        .setRequired(true))
+    .addStringOption(option =>
+      option.setName('reason')
+        .setDescription('The reason for kicking'))
+    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
+  async execute(interaction) {
+    const user = interaction.options.getUser('user');
+    const reason = interaction.options.getString('reason') || 'No reason provided';
+
+    try {
+      await interaction.guild.members.kick(user, reason);
+      await interaction.reply(`Successfully kicked ${user.tag} for: ${reason}`);
+    } catch (error) {
+      await interaction.reply({
+        content: `Failed to kick ${user.tag}: ${error.message}`,
+        ephemeral: true
+      });
+    }
+  },
+};</code></pre>
+                </div>
+            </section>
+
+            <section id="best-practices" class="section">
+                <h1>Best Practices</h1>
+                <div class="card">
+                    <h2>Code Organization</h2>
+                    <pre><code class="language-plaintext">project/
+  ├── commands/
+  │   ├── moderation/
+  │   ├── fun/
+  │   └── utility/
+  ├── events/
+  │   ├── client/
+  │   ├── guild/
+  │   └── message/
+  ├── utils/
+  │   ├── logger.js
+  │   └── helpers.js
+  ├── config/
+  │   └── config.json
+  ├── .env
+  ├── index.js
+  └── package.json</code></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-javascript.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
